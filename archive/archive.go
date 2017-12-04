@@ -4,17 +4,22 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/facebookgo/atomicfile"
 	"github.com/thisisaaronland/go-flickr-archive/flickr"
 	"github.com/tidwall/gjson"
 	_ "log"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type Archive struct {
 	User User
 	API  flickr.API
+	Root string
 }
 
 func NewArchiveForUser(api flickr.API, username string) (*Archive, error) {
@@ -63,6 +68,7 @@ func NewArchiveForUser(api flickr.API, username string) (*Archive, error) {
 	arch := Archive{
 		User: user,
 		API:  api,
+		Root: "",
 	}
 
 	return &arch, nil
@@ -138,7 +144,7 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 	info_params.Set("photo_id", ph.ID)
 	info_params.Set("secret", ph.Secret)
 
-	_, info_err := arch.API.ExecuteMethod("flickr.photos.getInfo", info_params)
+	info, info_err := arch.API.ExecuteMethod("flickr.photos.getInfo", info_params)
 
 	if info_err != nil {
 		return info_err
@@ -147,7 +153,73 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 	// { "photo": { "id": "38117183734", "secret": "2e8c5fce11", "server": "4520", "farm": 5, "dateuploaded": "1512404114", "isfavorite": 0, "license": 0, "safety_level": 0, "rotation": 0,
 	//     "visibility": { "ispublic": 1, "isfriend": 0, "isfamily": 0 },
 	//     "dates": { "posted": "1512404114", "taken": "2017-12-03 10:57:38", "takengranularity": 0, "takenunknown": 1, "lastupdate": "1512404117" }, "views": 0,
+
+	photo_id := gjson.GetBytes(info, "photo.id")
+
+	if !photo_id.Exists() {
+	   return errors.New("Unable to determin photo ID")
+	}
+
+	date_taken := gjson.GetBytes(info, "photo.dates.taken")
+
+	if !date_taken.Exists() {
+		return errors.New("Unable to determine date taken")
+	}
+
+	ymd_taken := strings.Split(date_taken.String(), " ")
+	ymd := ymd_taken[0]
+
+	dt, err := time.Parse("2006-01-02", ymd)
+
+	if err != nil {
+		return err
+	}
+
+	secret := gjson.GetBytes(info, "photo.originalsecret")	// is that right?
+
+	if !secret.Exists(){
+		return errors.New("Unable to determine secret")
+	}
 	
+	is_public := gjson.GetBytes(info, "photo.visibility.ispublic")
+
+	if !is_public.Exists() {
+		return errors.New("Unable to determine visibility")
+	}
+
+	visibility := "private" // default
+
+	if is_public.Bool() {
+		visibility = "public"
+	}
+
+	root := filepath.Join(arch.Root, arch.User.Username)
+	root = filepath.Join(root, visibility)
+	root = filepath.Join(root, fmt.Sprintf("%04d", dt.Year()))
+	root = filepath.Join(root, fmt.Sprintf("%02d", dt.Month()))
+	root = filepath.Join(root, fmt.Sprintf("%02d", dt.Day()))
+	root = filepath.Join(root, fmt.Sprintf("%s", photo_id.Int()))
+
+	_, err = os.Stat(root)
+
+	if os.IsNotExist(err) {
+
+		err = os.MkdirAll(root, 0755) // configurable perms
+
+		if err != nil {
+			return err
+		}
+	}
+
+	info_fname := fmt.Sprintf("%s_%s_i.json", photo_id, secret.String())
+	info_path := filepath.Join(root, info_fname)
+
+	err = arch.WriteFile(info_path, info)
+
+	if err != nil {
+		return err
+	}
+
 	sz_params := url.Values{}
 	sz_params.Set("photo_id", ph.ID)
 
@@ -157,13 +229,38 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 		return sz_err
 	}
 
-	// { "sizes": { "canblog": 0, "canprint": 0, "candownload": 1, 
-    "size": [
-        // { "label": "Square", "width": 75, "height": 75, "source": "https:\/\/farm5.staticflickr.com\/4515\/24960711428_7d25eac274_s.jpg", "url": "https:\/\/www.flickr.com\/photos\/138795394@N02\/24960711428\/sizes\/sq\/", "media": "photo" },
-      
+	// { "sizes": { "canblog": 0, "canprint": 0, "candownload": 1,
+	// "size": [
+	// { "label": "Square", "width": 75, "height": 75, "source": "https:\/\/farm5.staticflickr.com\/4515\/24960711428_7d25eac274_s.jpg", "url": "https:\/\/www.flickr.com\/photos\/138795394@N02\/24960711428\/sizes\/sq\/", "media": "photo" },
+
 	// make ROOT/USER/pubic|private/YYYY/MM/DD/PHOTO_ID
 	// write INFO to disk as PHOTO_ID_ORIGINALSECRET_i.json
 	// fetch all the sizes and write to disk
+
+	return nil
+}
+
+func (arch Archive) WriteFile(path string, body []byte) error {
+
+	fh, err := atomicfile.New(path, 0644) // custom perms?
+
+	if err != nil {
+		return err
+	}
+
+	_, err = fh.Write(body)
+
+	if err != nil {
+		fh.Abort()
+		return err
+	}
+
+	err = fh.Close()
+
+	if err != nil {
+		fh.Abort()
+		return err
+	}
 
 	return nil
 }
