@@ -7,5 +7,5 @@ import (
 type User struct {
 	Username   string
 	NSID       string
-	FirstPhoto time.Time
+	FirstPhoto time.Time	// please rename me...
 }
