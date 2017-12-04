@@ -144,6 +144,10 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 		return info_err
 	}
 
+	// { "photo": { "id": "38117183734", "secret": "2e8c5fce11", "server": "4520", "farm": 5, "dateuploaded": "1512404114", "isfavorite": 0, "license": 0, "safety_level": 0, "rotation": 0,
+	//     "visibility": { "ispublic": 1, "isfriend": 0, "isfamily": 0 },
+	//     "dates": { "posted": "1512404114", "taken": "2017-12-03 10:57:38", "takengranularity": 0, "takenunknown": 1, "lastupdate": "1512404117" }, "views": 0,
+	
 	sz_params := url.Values{}
 	sz_params.Set("photo_id", ph.ID)
 
@@ -153,6 +157,10 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 		return sz_err
 	}
 
+	// { "sizes": { "canblog": 0, "canprint": 0, "candownload": 1, 
+    "size": [
+        // { "label": "Square", "width": 75, "height": 75, "source": "https:\/\/farm5.staticflickr.com\/4515\/24960711428_7d25eac274_s.jpg", "url": "https:\/\/www.flickr.com\/photos\/138795394@N02\/24960711428\/sizes\/sq\/", "media": "photo" },
+      
 	// make ROOT/USER/pubic|private/YYYY/MM/DD/PHOTO_ID
 	// write INFO to disk as PHOTO_ID_ORIGINALSECRET_i.json
 	// fetch all the sizes and write to disk
