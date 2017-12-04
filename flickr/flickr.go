@@ -1,8 +1,8 @@
 package flickr
 
 import (
-       "net/http"
-       "net/url"
+	"net/http"
+	"net/url"
 )
 
 type StandardPhotoResponse struct {
@@ -31,25 +31,25 @@ type StandardPhotoResponsePhoto struct {
 }
 
 type WIPStandardPhotoResponse interface {
-     Page()	      int
-     Pages()	      int
-     PerPage()	      int
-     Total()	      int
-     Photos()	      []WIPStandardPhoto
+	Page() int
+	Pages() int
+	PerPage() int
+	Total() int
+	Photos() []WIPStandardPhoto
 }
 
 type WIPStandardPhoto interface {
-     ID()	      int64
-     Owner()	      string
-     Secret()	      string
-     Server()	      int
-     Farm()	      int
-     Title()	      string
-     IsPublic()	      bool
-     IsPrivate()      bool
-     IsFamily()	      bool
-     PhotoPage()      url.URL
-     PhotoURL()      url.URL     
+	ID() int64
+	Owner() string
+	Secret() string
+	Server() int
+	Farm() int
+	Title() string
+	IsPublic() bool
+	IsPrivate() bool
+	IsFamily() bool
+	PhotoPage() url.URL
+	PhotoURL() url.URL
 }
 
 type API interface {

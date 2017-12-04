@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/thisisaaronland/go-flickr-archive/flickr"
 	"github.com/tidwall/gjson"
-	"log"
+	_ "log"
 	"net/url"
 	"strconv"
 	"time"
@@ -132,44 +132,30 @@ func (arch Archive) PhotosForDay(dt time.Time) error {
 
 func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 
-	// make ROOT/USER/pubic|private/YYYY/MM/DD/PHOTO_ID
-
-	arch.ArchivePhotoInfo(ph)
-	arch.ArchivePhotoSizes(ph)
-	return nil
-}
-
-func (arch Archive) ArchivePhotoInfo(ph flickr.StandardPhotoResponsePhoto) error {
-
 	// https://www.flickr.com/services/api/flickr.photos.getInfo.html
 
-	params := url.Values{}
-	params.Set("photo_id", ph.ID)
-	params.Set("secret", ph.Secret)
+	info_params := url.Values{}
+	info_params.Set("photo_id", ph.ID)
+	info_params.Set("secret", ph.Secret)
 
-	rsp, err := arch.API.ExecuteMethod("flickr.photos.getInfo", params)
+	_, info_err := arch.API.ExecuteMethod("flickr.photos.getInfo", info_params)
 
-	if err != nil {
-		return err
+	if info_err != nil {
+		return info_err
 	}
 
-	log.Println(string(rsp))
-	return nil
-}
+	sz_params := url.Values{}
+	sz_params.Set("photo_id", ph.ID)
 
-func (arch Archive) ArchivePhotoSizes(ph flickr.StandardPhotoResponsePhoto) error {
+	_, sz_err := arch.API.ExecuteMethod("flickr.photos.getSizes", sz_params)
 
-	// https://www.flickr.com/services/api/flickr.photos.getSizes.html
-
-	params := url.Values{}
-	params.Set("photo_id", ph.ID)
-
-	rsp, err := arch.API.ExecuteMethod("flickr.photos.getSizes", params)
-
-	if err != nil {
-		return err
+	if sz_err != nil {
+		return sz_err
 	}
 
-	log.Println(string(rsp))
+	// make ROOT/USER/pubic|private/YYYY/MM/DD/PHOTO_ID
+	// write INFO to disk as PHOTO_ID_ORIGINALSECRET_i.json
+	// fetch all the sizes and write to disk
+
 	return nil
 }
