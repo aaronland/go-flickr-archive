@@ -160,10 +160,6 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 		return info_err
 	}
 
-	// { "photo": { "id": "38117183734", "secret": "2e8c5fce11", "server": "4520", "farm": 5, "dateuploaded": "1512404114", "isfavorite": 0, "license": 0, "safety_level": 0, "rotation": 0,
-	//     "visibility": { "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-	//     "dates": { "posted": "1512404114", "taken": "2017-12-03 10:57:38", "takengranularity": 0, "takenunknown": 1, "lastupdate": "1512404117" }, "views": 0,
-
 	photo_id := gjson.GetBytes(info, "photo.id")
 
 	if !photo_id.Exists() {
