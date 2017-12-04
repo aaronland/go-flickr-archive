@@ -7,7 +7,7 @@ import (
 	"github.com/facebookgo/atomicfile"
 	"github.com/thisisaaronland/go-flickr-archive/flickr"
 	"github.com/tidwall/gjson"
-	_ "log"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -22,7 +22,17 @@ type Archive struct {
 	Root string
 }
 
-func NewArchiveForUser(api flickr.API, username string) (*Archive, error) {
+func NewArchiveForUser(api flickr.API, username string, root string) (*Archive, error) {
+
+	info, err := os.Stat(root)
+
+	if os.IsNotExist(err) {
+		return nil, err
+	}
+
+	if !info.IsDir() {
+		return nil, errors.New("Archive root is not a directory")
+	}
 
 	params := url.Values{}
 	params.Set("username", username)
@@ -157,7 +167,7 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 	photo_id := gjson.GetBytes(info, "photo.id")
 
 	if !photo_id.Exists() {
-	   return errors.New("Unable to determin photo ID")
+		return errors.New("Unable to determin photo ID")
 	}
 
 	date_taken := gjson.GetBytes(info, "photo.dates.taken")
@@ -175,12 +185,6 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 		return err
 	}
 
-	secret := gjson.GetBytes(info, "photo.originalsecret")	// is that right?
-
-	if !secret.Exists(){
-		return errors.New("Unable to determine secret")
-	}
-	
 	is_public := gjson.GetBytes(info, "photo.visibility.ispublic")
 
 	if !is_public.Exists() {
@@ -193,12 +197,29 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 		visibility = "public"
 	}
 
+	var secret gjson.Result
+
+	if visibility == "public" {
+		secret = gjson.GetBytes(info, "photo.secret")
+	} else {
+		secret = gjson.GetBytes(info, "photo.originalsecret") // is that right?
+	}
+
+	if !secret.Exists() {
+		return errors.New("Unable to determine secret")
+	}
+
 	root := filepath.Join(arch.Root, arch.User.Username)
 	root = filepath.Join(root, visibility)
 	root = filepath.Join(root, fmt.Sprintf("%04d", dt.Year()))
 	root = filepath.Join(root, fmt.Sprintf("%02d", dt.Month()))
 	root = filepath.Join(root, fmt.Sprintf("%02d", dt.Day()))
-	root = filepath.Join(root, fmt.Sprintf("%s", photo_id.Int()))
+	root = filepath.Join(root, fmt.Sprintf("%d", photo_id.Int()))
+
+	info_fname := fmt.Sprintf("%d_%s_i.json", photo_id.Int(), secret.String())
+	info_path := filepath.Join(root, info_fname)
+
+	log.Println("ARCHIVE", info_path)
 
 	_, err = os.Stat(root)
 
@@ -210,9 +231,6 @@ func (arch Archive) ArchivePhoto(ph flickr.StandardPhotoResponsePhoto) error {
 			return err
 		}
 	}
-
-	info_fname := fmt.Sprintf("%s_%s_i.json", photo_id, secret.String())
-	info_path := filepath.Join(root, info_fname)
 
 	err = arch.WriteFile(info_path, info)
 
