@@ -9,7 +9,8 @@ import (
 	"github.com/thisisaaronland/go-flickr-archive/user"
 	"github.com/thisisaaronland/go-flickr-archive/util"
 	"github.com/tidwall/gjson"
-	_ "log"
+	_ "html/template"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -21,11 +22,50 @@ import (
 
 type StaticIndex struct {
 	Index
-	items []IndexItem
+	items       []IndexItem
+	breadcrumbs map[int64][]int
 }
 
 func (i *StaticIndex) Items() []IndexItem {
 	return i.items
+}
+
+func (i *StaticIndex) PreviousItem(item IndexItem) IndexItem {
+
+	id := item.ID()
+
+	nav, ok := i.breadcrumbs[id]
+
+	if !ok {
+		return nil
+	}
+
+	prev := nav[0]
+
+	if prev == -1 {
+		return nil
+	}
+
+	return i.items[prev]
+}
+
+func (i *StaticIndex) NextItem(item IndexItem) IndexItem {
+
+	id := item.ID()
+
+	nav, ok := i.breadcrumbs[id]
+
+	if !ok {
+		return nil
+	}
+
+	next := nav[1]
+
+	if next == -1 {
+		return nil
+	}
+
+	return i.items[next]
 }
 
 type StaticIndexItem struct {
@@ -302,6 +342,47 @@ func (archive *StaticArchive) ArchivePhoto(ctx context.Context, ph flickr.Standa
 	return e
 }
 
+// THIS IS TOTALLY IN FLUX...
+
+func (archive *StaticArchive) RenderArchive() error {
+
+	idx, err := archive.IndexArchive()
+
+	if err != nil {
+		return err
+	}
+
+	for _, item := range idx.Items() {
+		err := archive.RenderItem(item)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (archive *StaticArchive) RenderItem(item IndexItem) error {
+
+	root := archive.Root // please fix me
+	
+	dt := item.Date()
+	id := item.ID()
+	secret := item.Secret()
+	
+	root = filepath.Join(root, fmt.Sprintf("%04d", dt.Year()))
+	root = filepath.Join(root, fmt.Sprintf("%02d", dt.Month()))
+	root = filepath.Join(root, fmt.Sprintf("%02d", dt.Day()))
+	root = filepath.Join(root, fmt.Sprintf("%d", id))
+
+	fname := fmt.Sprintf("%d_%s_z.jpg", id, secret)
+	path := filepath.Join(root, fname)
+
+	log.Println(path)
+	return nil
+}
+
 func (archive *StaticArchive) IndexArchive() (Index, error) {
 
 	items := make([]IndexItem, 0)
@@ -346,7 +427,7 @@ func (archive *StaticArchive) IndexArchive() (Index, error) {
 			return errors.New("Unabled to determine title")
 		}
 
-		secret := gjson.GetBytes(body, "photo.secret")
+		secret := gjson.GetBytes(body, "photo.secret") // secret not originalsecret because we're going to display "_z.jpg"
 
 		if !secret.Exists() {
 			return errors.New("Unabled to determine title")
@@ -363,8 +444,6 @@ func (archive *StaticArchive) IndexArchive() (Index, error) {
 		if err != nil {
 			return err
 		}
-
-		// ymd := fmt.Sprintf("%04d-%02d-%02d", dt.Year(), dt.Month(), dt.Day())
 
 		item := StaticIndexItem{
 			id:     id.Int(),
@@ -386,8 +465,30 @@ func (archive *StaticArchive) IndexArchive() (Index, error) {
 		return nil, err
 	}
 
+	count := len(items)
+	breadcrumbs := make(map[int64][]int)
+
+	for idx, item := range items {
+
+		prev_idx := -1
+		next_idx := -1
+
+		id := item.ID()
+
+		if idx != 0 {
+			prev_idx = idx - 1
+		}
+
+		if idx < count-1 {
+			next_idx = idx + 1
+		}
+
+		breadcrumbs[id] = []int{prev_idx, next_idx}
+	}
+
 	idx := StaticIndex{
-		items: items,
+		items:       items,
+		breadcrumbs: breadcrumbs,
 	}
 
 	return &idx, err

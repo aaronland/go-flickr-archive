@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>{% block title %}{% endblock %}</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="referrer" content="origin">
+		<meta http-equiv="X-UA-Compatible" content="IE=9" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="HandheldFriendly" content="true" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+
+		<script type="text/javascript" src="../../../../js/index.js"></script>
+		<link rel="stylesheet" type="text/css" href="../../../../css/index.css" />
+		<link id="previous-page" rel="prev" type="text/html" href="../../../../{{ prev.ymd | e }}/{{ prev.id | e }}/index.html" title="{{ prev.title | e }}"/>
+		<link id="next-page" rel="next" type="text/html" href="../../../../{{ next.ymd | e }}/{{ next.id | e }}/index.html" title="{{ next.title | e }}"/>
+	</head>
+	<body>
+	  <div id="content">
+
+	    <div id="photo-page">
+
+	      <div id="photo-navigation">
+		<ul>
+		  <li><a href="../../../../">everything</a></li>
+		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/">{{ dt.strftime("%Y") | e }}</a></li>
+		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}">{{ dt.strftime("%m") | e }}</a></li>
+		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}/{{ dt.strftime("%d") | e }}/">{{ dt.strftime("%d") | e }}</a></li>
+		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}/{{ dt.strftime("%d") | e }}/{{ info.photo.id | e }}/">{{ info.photo.id | e }}</a></li>
+		</ul>
+	      </div>
+
+	      <div id="photo">
+		<img src="{{ info.photo.id | e }}_{{ info.photo.secret | e }}_z.jpg" />
+		
+		<div id="photo-meta-date">
+		  <span class="photo-meta-date-day">{{ dt.strftime("%A").lower() | e }}</span> <span class="photo-meta-date-month" data-month="{{ dt.strftime.month | e }}"><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}">{{ dt.strftime("%B").lower() | e }}</a></span> <span class="photo-meta-date-day" data-day="{{ dt.strftime.day | e }}"><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}/{{ dt.strftime("%d") | e }}/">{{ dt.strftime("%d") | e }}</a></span>, <span class="photo-meta-date-year" data-year="{{ dt.strftime.year | e }}" ><a href="../../../../{{ dt.strftime("%Y") | e }}/">{{ dt.strftime("%Y") | e }}</a></span>
+		  
+		</div>
+		
+	      </div>
+	      
+	      <div id="photo-meta-title">
+		{% if info.photo.title._content %}{{ info.photo.title._content | e }}{% else %}Untitled photo #{{ info.photo.id | e }}{% endif %}
+	      </div>
+	      
+	      <div id="photo-nav">
+		
+		{% if prev %}
+		<div id="photo-nav-prev" class="photo-thumb">
+		  <a href="../../../../{{ prev.ymd | e }}/{{ prev.id | e }}/index.html"><img src="../../../../{{ prev.ymd | e }}/{{ prev.id | e }}/{{ prev.id | e }}_{{ prev.secret | e }}_t.jpg" alt="{{ prev.title | e }}" /></a>
+		</div>
+		{% endif %}
+		
+		{% if next %}
+		<div id="photo-nav-next" class="photo-thumb">
+		  <a href="../../../../{{ next.ymd | e }}/{{ next.id | e }}/index.html"><img src="../../../../{{ next.ymd | e }}/{{ next.id | e }}/{{ next.id | e }}_{{ next.secret | e }}_t.jpg" alt="{{ next.title | e }}" /></a>
+		</div>
+		{% endif %}
+		
+	      </div>
+	      
+	    </div>
+	    
+	  </div>
+	</body>
+</html>

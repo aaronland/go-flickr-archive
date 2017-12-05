@@ -1,6 +1,10 @@
 CWD=$(shell pwd)
 GOPATH := $(CWD)
 
+foo:
+	@GOPATH=$(GOPATH) go build -o bin/go-bindata ./vendor/github.com/jteeuwen/go-bindata/go-bindata/
+	# bundle assets here
+
 prep:
 	if test -d pkg; then rm -rf pkg; fi
 
@@ -18,8 +22,9 @@ rmdeps:
 build:	fmt bin
 
 deps:
-	@GOPATH=$(GOPATH) go get -u "github.com/tidwall/gjson/"
 	@GOPATH=$(GOPATH) go get -u "github.com/facebookgo/atomicfile"
+	@GOPATH=$(GOPATH) go get -u "github.com/jteeuwen/go-bindata/"
+	@GOPATH=$(GOPATH) go get -u "github.com/tidwall/gjson/"
 
 vendor-deps: rmdeps deps
 	if test ! -d vendor; then mkdir vendor; fi
