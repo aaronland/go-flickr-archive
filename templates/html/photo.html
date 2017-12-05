@@ -12,8 +12,8 @@
 
 		<script type="text/javascript" src="../../../../js/index.js"></script>
 		<link rel="stylesheet" type="text/css" href="../../../../css/index.css" />
-		<link id="previous-page" rel="prev" type="text/html" href="../../../../{{ prev.ymd | e }}/{{ prev.id | e }}/index.html" title="{{ prev.title | e }}"/>
-		<link id="next-page" rel="next" type="text/html" href="../../../../{{ next.ymd | e }}/{{ next.id | e }}/index.html" title="{{ next.title | e }}"/>
+		<link id="previous-page" rel="prev" type="text/html" href="../../../../{{ .Previous.IndexPath() }}" title="{{ .Previous.Title() }}"/>
+		<link id="next-page" rel="next" type="text/html" href="../../../../{{ .Next.IndexPath() }}" title="{{ .Next.Title() }}"/>
 	</head>
 	<body>
 	  <div id="content">
@@ -23,7 +23,7 @@
 	      <div id="photo-navigation">
 		<ul>
 		  <li><a href="../../../../">everything</a></li>
-		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/">{{ dt.strftime("%Y") | e }}</a></li>
+		  <li><a href="../../../../{{ .Photo.Year() }}/">{{ .Photo.Year() }}</a></li>
 		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}">{{ dt.strftime("%m") | e }}</a></li>
 		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}/{{ dt.strftime("%d") | e }}/">{{ dt.strftime("%d") | e }}</a></li>
 		  <li><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}/{{ dt.strftime("%d") | e }}/{{ info.photo.id | e }}/">{{ info.photo.id | e }}</a></li>
@@ -31,7 +31,7 @@
 	      </div>
 
 	      <div id="photo">
-		<img src="{{ info.photo.id | e }}_{{ info.photo.secret | e }}_z.jpg" />
+		<img src="{{ .Photo.ImagePath("z") }}" />
 		
 		<div id="photo-meta-date">
 		  <span class="photo-meta-date-day">{{ dt.strftime("%A").lower() | e }}</span> <span class="photo-meta-date-month" data-month="{{ dt.strftime.month | e }}"><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}">{{ dt.strftime("%B").lower() | e }}</a></span> <span class="photo-meta-date-day" data-day="{{ dt.strftime.day | e }}"><a href="../../../../{{ dt.strftime("%Y") | e }}/{{ dt.strftime("%m") | e }}/{{ dt.strftime("%d") | e }}/">{{ dt.strftime("%d") | e }}</a></span>, <span class="photo-meta-date-year" data-year="{{ dt.strftime.year | e }}" ><a href="../../../../{{ dt.strftime("%Y") | e }}/">{{ dt.strftime("%Y") | e }}</a></span>
@@ -41,7 +41,7 @@
 	      </div>
 	      
 	      <div id="photo-meta-title">
-		{% if info.photo.title._content %}{{ info.photo.title._content | e }}{% else %}Untitled photo #{{ info.photo.id | e }}{% endif %}
+		{% if info.photo.title._content %}{{ .Photo.Title() }}{% else %}Untitled photo #{{ .Photo.ID() }}{% endif %}
 	      </div>
 	      
 	      <div id="photo-nav">
