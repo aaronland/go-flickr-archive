@@ -8,6 +8,8 @@ self:   prep rmdeps
 	if test ! -d src/github.com/thisisaaronland/go-flickr-archive; then mkdir -p src/github.com/thisisaaronland/go-flickr-archive; fi
 	cp -r archive src/github.com/thisisaaronland/go-flickr-archive/
 	cp -r flickr src/github.com/thisisaaronland/go-flickr-archive/
+	cp -r user src/github.com/thisisaaronland/go-flickr-archive/
+	cp -r util src/github.com/thisisaaronland/go-flickr-archive/
 	cp -r vendor/* src/
 
 rmdeps:
@@ -30,6 +32,8 @@ fmt:
 	go fmt cmd/*.go
 	go fmt archive/*.go
 	go fmt flickr/*.go
+	go fmt user/*.go
+	go fmt util/*.go
 
 bin: 	self
 	@GOPATH=$(GOPATH) go build -o bin/flickr-archive cmd/flickr-archive.go

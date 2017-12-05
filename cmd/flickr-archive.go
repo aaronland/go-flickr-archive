@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/thisisaaronland/go-flickr-archive/archive"
 	"github.com/thisisaaronland/go-flickr-archive/flickr"
+	"github.com/thisisaaronland/go-flickr-archive/user"	
 	"log"
 	"path/filepath"
 	"time"
@@ -30,18 +31,20 @@ func main() {
 		log.Fatal(err)
 	}
 
-	arch, err := archive.NewArchiveForUser(api, *username, abs_root)
+	u, err := user.NewArchiveUserForUsername(api, *username)
+
+	arch, err := archive.NewStaticArchiveForUser(api, u, abs_root)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	dt := arch.User.FirstPhoto
+	dt := u.DateFirstPhoto()
 
 	for {
 
 		log.Println(dt.Format(time.RFC3339))
-		arch.PhotosForDay(dt)
+		arch.ArchivePhotosForDay(dt)
 
 		dt = dt.AddDate(0, 0, 1)
 		today := time.Now()
