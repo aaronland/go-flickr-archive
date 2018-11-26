@@ -1,20 +1,12 @@
 CWD=$(shell pwd)
 GOPATH := $(CWD)
 
-foo:
-	@GOPATH=$(GOPATH) go build -o bin/go-bindata ./vendor/github.com/jteeuwen/go-bindata/go-bindata/
-	# bundle assets here
-
 prep:
 	if test -d pkg; then rm -rf pkg; fi
 
 self:   prep rmdeps
 	if test ! -d src/github.com/thisisaaronland/go-flickr-archive; then mkdir -p src/github.com/thisisaaronland/go-flickr-archive; fi
-	cp -r archive src/github.com/thisisaaronland/go-flickr-archive/
-	cp -r assets src/github.com/thisisaaronland/go-flickr-archive/
 	cp -r flickr src/github.com/thisisaaronland/go-flickr-archive/
-	cp -r index src/github.com/thisisaaronland/go-flickr-archive/
-	cp -r render src/github.com/thisisaaronland/go-flickr-archive/
 	cp -r user src/github.com/thisisaaronland/go-flickr-archive/
 	cp -r util src/github.com/thisisaaronland/go-flickr-archive/
 	cp -r vendor/* src/
@@ -26,7 +18,6 @@ build:	fmt bin
 
 deps:
 	@GOPATH=$(GOPATH) go get -u "github.com/facebookgo/atomicfile"
-	@GOPATH=$(GOPATH) go get -u "github.com/jteeuwen/go-bindata/"
 	@GOPATH=$(GOPATH) go get -u "github.com/tidwall/gjson/"
 
 vendor-deps: rmdeps deps
