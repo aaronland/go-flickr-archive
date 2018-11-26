@@ -1,6 +1,8 @@
 package index
 
 import (
+	"fmt"
+	"path/filepath"
 	"time"
 )
 
@@ -107,6 +109,7 @@ func (i *StaticIndexItem) IndexPath() string {
 	return filepath.Join(root, "index.html")
 }
 
+/*
 func (r *StaticRender) IndexStaticArchive(path string) (Index, error) {
 
 	items := make([]IndexItem, 0)
@@ -217,3 +220,4 @@ func (r *StaticRender) IndexStaticArchive(path string) (Index, error) {
 
 	return &idx, err
 }
+*/
