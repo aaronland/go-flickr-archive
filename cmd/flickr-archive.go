@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/thisisaaronland/go-flickr-archive/archive"
+	"github.com/thisisaaronland/go-flickr-archive/archive"	
 	"github.com/thisisaaronland/go-flickr-archive/flickr"
 	"github.com/thisisaaronland/go-flickr-archive/user"
 	"log"
