@@ -13,7 +13,7 @@ import (
 )
 
 type StaticRender struct {
-	// Render
+	Render
 	Root string
 }
 
