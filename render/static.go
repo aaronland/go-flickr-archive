@@ -6,13 +6,14 @@ import (
 	"github.com/thisisaaronland/go-flickr-archive/index"
 	"github.com/thisisaaronland/go-flickr-archive/util"
 	"html/template"
-	"os"
-	"path/filepath"
-	"sync"
+	_ "os"
+	_ "path/filepath"
+	_ "sync"
+	"time"
 )
 
 type StaticRender struct {
-	Render
+	// Render
 	Root string
 }
 
