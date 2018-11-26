@@ -1,6 +1,8 @@
 package index
 
-import ()
+import (
+	"time"
+)
 
 type StaticIndex struct {
 	Index
