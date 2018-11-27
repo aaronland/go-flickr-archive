@@ -1,5 +1,9 @@
 package archive
 
+// all of this needs to be reconciled with the new new
+// (20181127/thisisaaronland)
+
+/*
 import (
 	"context"
 	"encoding/json"
@@ -268,3 +272,4 @@ func (archive *StaticArchive) ArchivePhoto(ctx context.Context, ph flickr.Standa
 
 	return e
 }
+*/
