@@ -2,7 +2,7 @@ package user
 
 import (
 	"errors"
-	"github.com/thisisaaronland/go-flickr-archive/flickr"
+	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/tidwall/gjson"
 	"net/url"
 	"time"

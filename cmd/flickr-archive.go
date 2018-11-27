@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/thisisaaronland/go-flickr-archive/archive"	
-	"github.com/thisisaaronland/go-flickr-archive/flickr"
-	"github.com/thisisaaronland/go-flickr-archive/user"
+	"github.com/aaronland/go-flickr-archive/archive"	
+	"github.com/aaronland/go-flickr-archive/flickr"
+	"github.com/aaronland/go-flickr-archive/user"
 	"log"
 	"path/filepath"
 	"time"

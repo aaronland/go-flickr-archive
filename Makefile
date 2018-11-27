@@ -5,11 +5,11 @@ prep:
 	if test -d pkg; then rm -rf pkg; fi
 
 self:   prep rmdeps
-	if test ! -d src/github.com/thisisaaronland/go-flickr-archive; then mkdir -p src/github.com/thisisaaronland/go-flickr-archive; fi
-	cp -r archive src/github.com/thisisaaronland/go-flickr-archive/
-	cp -r flickr src/github.com/thisisaaronland/go-flickr-archive/
-	cp -r user src/github.com/thisisaaronland/go-flickr-archive/
-	cp -r util src/github.com/thisisaaronland/go-flickr-archive/
+	if test ! -d src/github.com/thisisaaronland/go-flickr-archive; then mkdir -p src/github.com/aaronland/go-flickr-archive; fi
+	cp -r archive src/github.com/aaronland/go-flickr-archive/
+	cp -r flickr src/github.com/aaronland/go-flickr-archive/
+	cp -r user src/github.com/aaronland/go-flickr-archive/
+	cp -r util src/github.com/aaronland/go-flickr-archive/
 	cp -r vendor/* src/
 
 rmdeps:
@@ -20,6 +20,7 @@ build:	fmt bin
 deps:
 	@GOPATH=$(GOPATH) go get -u "github.com/facebookgo/atomicfile"
 	@GOPATH=$(GOPATH) go get -u "github.com/tidwall/gjson/"
+	@GOPATH=$(GOPATH) go get -u "github.com/aaronland/go-storage/"
 
 vendor-deps: rmdeps deps
 	if test ! -d vendor; then mkdir vendor; fi
@@ -30,11 +31,8 @@ vendor-deps: rmdeps deps
 
 fmt:
 	go fmt cmd/*.go
-	go fmt assets/*.go
 	go fmt archive/*.go
 	go fmt flickr/*.go
-	go fmt index/*.go
-	go fmt render/*.go
 	go fmt user/*.go
 	go fmt util/*.go
 

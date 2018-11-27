@@ -2,7 +2,7 @@ package archive
 
 import (
 	"context"
-	"github.com/thisisaaronland/go-flickr-archive/flickr"
+	"github.com/aaronland/go-flickr-archive/flickr"
 	"time"
 )
 
