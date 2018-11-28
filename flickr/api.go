@@ -76,7 +76,7 @@ func (api *FlickrAuthAPI) ExecuteMethod(method string, params url.Values) ([]byt
 	return body, nil
 }
 
-func (api *FlickrAuthAPI) ExecutedMethodPaginated(method string, params url.Values, cb SPRCallbackFunc) error {
+func (api *FlickrAuthAPI) ExecuteMethodPaginated(method string, params url.Values, cb SPRCallbackFunc) error {
 
 	page := 1
 	pages := 0

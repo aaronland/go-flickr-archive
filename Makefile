@@ -23,6 +23,7 @@ deps:
 	@GOPATH=$(GOPATH) go get -u "github.com/facebookgo/atomicfile"
 	@GOPATH=$(GOPATH) go get -u "github.com/tidwall/gjson/"
 	@GOPATH=$(GOPATH) go get -u "github.com/aaronland/go-storage/"
+	@GOPATH=$(GOPATH) go get -u "github.com/whosonfirst/go-whosonfirst-cli/"
 
 vendor-deps: rmdeps deps
 	if test ! -d vendor; then mkdir vendor; fi
@@ -41,4 +42,5 @@ fmt:
 	go fmt util/*.go
 
 bin: 	self
-	@GOPATH=$(GOPATH) go build -o bin/flickr-archive cmd/flickr-archive.go
+	@GOPATH=$(GOPATH) go build -o bin/flickr-archive-photos cmd/flickr-archive-photos.go
+	@GOPATH=$(GOPATH) go build -o bin/flickr-archive-search cmd/flickr-archive-search.go

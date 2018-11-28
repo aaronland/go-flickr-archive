@@ -12,3 +12,4 @@ bin
 *.eml
 .DS_Store
 debug*
+echo.txt

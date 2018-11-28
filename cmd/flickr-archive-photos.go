@@ -71,33 +71,4 @@ func main() {
 
 		os.Exit(1)
 	}
-
-	// old code to be updated...
-
-	/*
-
-
-		u, err := user.NewArchiveUserForUsername(api, *username)
-
-		arch, err := archive.NewStaticArchiveForUser(api, u, abs_root)
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		dt := u.DateFirstPhoto()
-
-		for {
-
-			log.Println(dt.Format(time.RFC3339))
-			arch.ArchivePhotosForDay(dt)
-
-			dt = dt.AddDate(0, 0, 1)
-			today := time.Now()
-
-			if dt.After(today) {
-				break
-			}
-		}
-	*/
 }

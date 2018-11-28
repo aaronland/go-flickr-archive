@@ -2,11 +2,13 @@ package storage
 
 import (
 	"errors"
+	"github.com/aaronland/go-string/dsn"
 	"github.com/whosonfirst/walk"
 	"io"
 	_ "log"
 	"os"
 	"path/filepath"
+	_ "strconv"
 )
 
 type FSFile struct {
@@ -33,14 +35,51 @@ type FSStore struct {
 	dir_perms  os.FileMode
 }
 
-func NewFSStore(root string) (Store, error) {
+func NewFSStore(str_dsn string) (Store, error) {
 
-	abs_root, err := filepath.Abs(root)
+	dsn_map, err := dsn.StringToDSNWithKeys(str_dsn, "root")
 
 	if err != nil {
 		return nil, err
 	}
 
+	abs_root, err := filepath.Abs(dsn_map["root"])
+
+	if err != nil {
+		return nil, err
+	}
+
+	/*
+	file_perms := 0644
+	dir_perms := 0755
+
+	str_fileperms, ok := dsn_map["file_perms"]
+
+	if ok {
+
+		perms, err := strconv.ParseUint(str_fileperms, 10, 32)
+
+		if err != nil {
+			return nil, errors.New("Invalid file permissions")
+		}
+
+		file_perms = perms
+	}
+
+	str_dirperms, ok := dsn_map["dir_perms"]
+
+	if ok {
+
+		perms, err := strconv.ParseUint(str_dirperms, 10, 32)
+
+		if err != nil {
+			return nil, errors.New("Invalid directory permissions")
+		}
+
+		dir_perms = perms
+	}
+	*/
+	
 	s := FSStore{
 		root:       abs_root,
 		file_perms: 0644,

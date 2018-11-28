@@ -16,7 +16,7 @@ func ArchiveSPR(api flickr.API, arch archive.Archive, method string, query url.V
 
 		for _, spr_ph := range spr.Photos.Photos {
 
-			ph, err := photo.NewFlickrPhoto(spr_ph.ID)
+			ph, err := photo.NewFlickrPhotoFromString(spr_ph.ID)
 
 			if err != nil {
 				return err
@@ -28,7 +28,7 @@ func ArchiveSPR(api flickr.API, arch archive.Archive, method string, query url.V
 		ok, _ := arch.ArchivePhotos(photos...)
 
 		if !ok {
-			return nil, errors.New("One or more photos failed to be archived")
+			return errors.New("One or more photos failed to be archived")
 		}
 
 		return nil

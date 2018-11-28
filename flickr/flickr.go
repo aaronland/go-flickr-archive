@@ -54,5 +54,6 @@ type WIPStandardPhoto interface {
 
 type API interface {
 	ExecuteMethod(string, url.Values) ([]byte, error)
+	ExecuteMethodPaginated(string, url.Values, SPRCallbackFunc) error
 	Call(url.Values) (*http.Response, error)
 }
