@@ -5,6 +5,7 @@ import (
 	"github.com/aaronland/go-flickr-archive/archive"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
+	"log"
 	"net/url"
 )
 
@@ -25,9 +26,14 @@ func ArchiveSPR(api flickr.API, arch archive.Archive, method string, query url.V
 			photos = append(photos, ph)
 		}
 
-		ok, _ := arch.ArchivePhotos(photos...)
+		ok, errs := arch.ArchivePhotos(photos...)
 
 		if !ok {
+
+			for _, e := range errs {
+				log.Println(e)
+			}
+
 			return errors.New("One or more photos failed to be archived")
 		}
 
