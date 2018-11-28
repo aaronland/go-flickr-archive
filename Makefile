@@ -9,6 +9,7 @@ self:   prep rmdeps
 	cp -r archive src/github.com/aaronland/go-flickr-archive/
 	cp -r flickr src/github.com/aaronland/go-flickr-archive/
 	cp -r photo src/github.com/aaronland/go-flickr-archive/
+	cp -r spr src/github.com/aaronland/go-flickr-archive/
 	cp -r user src/github.com/aaronland/go-flickr-archive/
 	cp -r util src/github.com/aaronland/go-flickr-archive/
 	cp -r vendor/* src/
@@ -35,6 +36,7 @@ fmt:
 	go fmt archive/*.go
 	go fmt flickr/*.go
 	go fmt photo/*.go
+	go fmt spr/*.go
 	go fmt user/*.go
 	go fmt util/*.go
 

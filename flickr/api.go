@@ -2,6 +2,7 @@ package flickr
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/tidwall/gjson"
@@ -9,9 +10,12 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
+
+type SPRCallbackFunc func(StandardPhotoResponse) error
 
 type FlickrAuthAPI struct {
 	API
@@ -70,6 +74,47 @@ func (api *FlickrAuthAPI) ExecuteMethod(method string, params url.Values) ([]byt
 	}
 
 	return body, nil
+}
+
+func (api *FlickrAuthAPI) ExecutedMethodPaginated(method string, params url.Values, cb SPRCallbackFunc) error {
+
+	page := 1
+	pages := 0
+
+	for {
+
+		params.Set("page", strconv.Itoa(page))
+
+		rsp, err := api.ExecuteMethod(method, params)
+
+		if err != nil {
+			return err
+		}
+
+		var spr StandardPhotoResponse
+
+		err = json.Unmarshal(rsp, &spr)
+
+		if err != nil {
+			return err
+		}
+
+		err = cb(spr)
+
+		if err != nil {
+			return err
+		}
+
+		pages = spr.Photos.Pages
+
+		if pages == 0 || pages == page {
+			break
+		}
+
+		page += 1
+	}
+
+	return nil
 }
 
 func (api FlickrAuthAPI) Call(params url.Values) (*http.Response, error) {
