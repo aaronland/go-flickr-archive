@@ -1,5 +1,8 @@
 package spr
 
+// this is ppppprrrrrobably deprecated since (arch *Archivist) ArchivePhotosForSPR has been
+// added but not sure yet... (20181129/thisisaaronland)
+
 import (
 	"errors"
 	"github.com/aaronland/go-flickr-archive/archive"
@@ -42,24 +45,3 @@ func ArchiveSPR(api flickr.API, arch archive.Archive, method string, query url.V
 
 	return api.ExecuteMethodPaginated(method, query, cb)
 }
-
-/*
-
-for user, by day stuff
-
-func (archive *StaticArchive) ArchivePhotosForDay(dt time.Time) error {
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// because time.Format() is just so weird...
-
-	y, m, d := dt.Date()
-	ymd := fmt.Sprintf("%04d-%02d-%02d", y, m, d)
-
-	min_date := fmt.Sprintf("%s 00:00:00", ymd)
-	max_date := fmt.Sprintf("%s 23:59:59", ymd)
-
-	user_id := archive.User.ID()
-
-*/

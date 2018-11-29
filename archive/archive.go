@@ -7,17 +7,22 @@ import (
 	"fmt"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
+	"github.com/aaronland/go-flickr-archive/spr"
+	"github.com/aaronland/go-flickr-archive/user"
 	"github.com/aaronland/go-storage"
 	"github.com/tidwall/gjson"
 	"io/ioutil"
+	_ "log"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 type Archive interface {
 	ArchivePhotos(...photo.Photo) (bool, []error)
+	ArchivePhotosWithSearch(url.Values) (bool, []error)
 }
 
 type ArchiveOptions struct {
@@ -57,6 +62,62 @@ func NewArchivist(api flickr.API, store storage.Store, opts *ArchiveOptions) (Ar
 	}
 
 	return &arch, nil
+}
+
+func ArchivePhotosForUser(arch Archive, u user.User) (bool, []error) {
+
+	query := url.Values{}
+	query.Set("user_id", u.ID())
+
+	dt := u.DateFirstPhoto()
+
+	for {
+
+		ArchivePhotosWithSearchForDay(arch, query, dt)
+
+		dt = dt.AddDate(0, 0, 1)
+		today := time.Now()
+
+		if dt.After(today) {
+			break
+		}
+	}
+
+	return true, nil
+}
+
+func ArchivePhotosWithSearchForDay(arch Archive, query url.Values, dt time.Time) (bool, []error) {
+
+	// ctx, cancel := context.WithCancel(context.Background())
+	// defer cancel()
+
+	// because time.Format() is just so weird...
+
+	y, m, d := dt.Date()
+	ymd := fmt.Sprintf("%04d-%02d-%02d", y, m, d)
+
+	min_date := fmt.Sprintf("%s 00:00:00", ymd)
+	max_date := fmt.Sprintf("%s 23:59:59", ymd)
+
+	query.Set("min_upload_date", min_date)
+	query.Set("max_upload_date", max_date)
+
+	return arch.ArchivePhotosWithSearch(query)
+}
+
+// see this? it's an instance method mostly because I haven't decided whether or
+// not to make 'API()' part of the interface... (20181129/thisisaaronland)
+
+func (arch *Archivist) ArchivePhotosWithSearch(query url.Values) (bool, []error) {
+
+	method := "flickr.photos.search"
+	err := spr.ArchiveSPR(arch.api, arch, method, query)
+
+	if err != nil {
+	   return false, []error{ err }
+	}
+
+	return true, nil
 }
 
 func (arch *Archivist) ArchivePhotos(photos ...photo.Photo) (bool, []error) {
