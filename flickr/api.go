@@ -42,6 +42,10 @@ func (api *FlickrAuthAPI) ExecuteMethod(method string, params url.Values) ([]byt
 		return nil, err
 	}
 
+	if rsp.StatusCode != 200 {
+		return nil, errors.New(rsp.Status)
+	}
+	
 	defer rsp.Body.Close()
 
 	body, err := ioutil.ReadAll(rsp.Body)
