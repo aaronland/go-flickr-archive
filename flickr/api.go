@@ -127,12 +127,11 @@ func (api *FlickrAuthAPI) ExecuteMethodPaginated(method string, params url.Value
 		}
 
 		pages = spr.Photos.Pages
-
-		if pages == 0 || pages == page {
+		page += 1
+		
+		if pages == 0 || page > pages {
 			break
 		}
-
-		page += 1
 	}
 
 	return nil
