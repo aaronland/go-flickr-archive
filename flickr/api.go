@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/tidwall/gjson"
 	"io/ioutil"
+	_ "log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -19,15 +20,31 @@ type SPRCallbackFunc func(StandardPhotoResponse) error
 
 type FlickrAuthAPI struct {
 	API
-	Key    string
-	Secret string
+	Key      string
+	Secret   string
+	client   *http.Client
+	throttle <-chan time.Time
 }
 
 func NewFlickrAuthAPI(key string, secret string) (API, error) {
 
+	// https://github.com/golang/go/wiki/RateLimiting
+
+	rate := time.Second / 10
+	throttle := time.Tick(rate)
+
+	tr := &http.Transport{
+		MaxIdleConns:    10,
+		IdleConnTimeout: 30 * time.Second,
+	}
+
+	cl := &http.Client{Transport: tr}
+
 	api := FlickrAuthAPI{
-		Key:    key,
-		Secret: secret,
+		Key:      key,
+		Secret:   secret,
+		throttle: throttle,
+		client:   cl,
 	}
 
 	return &api, nil
@@ -45,7 +62,7 @@ func (api *FlickrAuthAPI) ExecuteMethod(method string, params url.Values) ([]byt
 	if rsp.StatusCode != 200 {
 		return nil, errors.New(rsp.Status)
 	}
-	
+
 	defer rsp.Body.Close()
 
 	body, err := ioutil.ReadAll(rsp.Body)
@@ -132,13 +149,6 @@ func (api FlickrAuthAPI) Call(params url.Values) (*http.Response, error) {
 
 	url := "https://api.flickr.com/services/rest/"
 
-	tr := &http.Transport{
-		MaxIdleConns:    10,
-		IdleConnTimeout: 30 * time.Second,
-	}
-
-	cl := &http.Client{Transport: tr}
-
 	req, err := http.NewRequest("POST", url, nil)
 
 	if err != nil {
@@ -148,7 +158,13 @@ func (api FlickrAuthAPI) Call(params url.Values) (*http.Response, error) {
 	// log.Printf("%s?%s\n", url, params.Encode())
 
 	req.URL.RawQuery = params.Encode()
-	return cl.Do(req)
+
+	<-api.throttle
+
+	rsp, err := api.client.Do(req)
+
+	// log.Println(req.URL, rsp.Status)
+	return rsp, err
 }
 
 // copied from https://github.com/toomore/lazyflickrgo
