@@ -1,4 +1,4 @@
-package archive
+package archivist
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/aaronland/go-flickr-archive"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
 	"github.com/aaronland/go-storage"
@@ -18,15 +19,38 @@ import (
 	"strconv"
 )
 
-type Archivist struct {
-	Archive
-	store   storage.Store
-	options *ArchiveOptions
+type StaticArchivistOptions struct {
+	ArchiveInfo     bool
+	ArchiveSizes    bool
+	ArchiveEXIF     bool
+	ArchiveComments bool
+	ArchiveRequest  bool
+	// Logger
+	// Throttle
 }
 
-func NewArchivist(store storage.Store, opts *ArchiveOptions) (Archive, error) {
+func DefaultStaticArchivistOptions() (*StaticArchivistOptions, error) {
 
-	arch := Archivist{
+	opts := StaticArchivistOptions{
+		ArchiveInfo:     true,
+		ArchiveSizes:    false,
+		ArchiveEXIF:     false,
+		ArchiveComments: false,
+		ArchiveRequest:  false,
+	}
+
+	return &opts, nil
+}
+
+type StaticArchivist struct {
+	archive.Archivist
+	store   storage.Store
+	options *StaticArchivistOptions
+}
+
+func NewStaticArchivist(store storage.Store, opts *StaticArchivistOptions) (archive.Archivist, error) {
+
+	arch := StaticArchivist{
 		store:   store,
 		options: opts,
 	}
@@ -34,7 +58,7 @@ func NewArchivist(store storage.Store, opts *ArchiveOptions) (Archive, error) {
 	return &arch, nil
 }
 
-func (arch *Archivist) ArchivePhotos(api flickr.API, photos ...photo.Photo) error {
+func (arch *StaticArchivist) ArchivePhotos(api flickr.API, photos ...photo.Photo) error {
 
 	done_ch := make(chan bool)
 	err_ch := make(chan error)
@@ -83,7 +107,7 @@ func (arch *Archivist) ArchivePhotos(api flickr.API, photos ...photo.Photo) erro
 	return nil
 }
 
-func (arch *Archivist) ArchivePhoto(ctx context.Context, api flickr.API, ph photo.Photo) error {
+func (arch *StaticArchivist) ArchivePhoto(ctx context.Context, api flickr.API, ph photo.Photo) error {
 
 	select {
 	case <-ctx.Done():
@@ -93,6 +117,8 @@ func (arch *Archivist) ArchivePhoto(ctx context.Context, api flickr.API, ph phot
 	}
 
 	str_id := strconv.FormatInt(ph.Id(), 10)
+
+	// log.Println("ARCHIVE", str_id)
 
 	info_params := url.Values{}
 	info_params.Set("photo_id", str_id)

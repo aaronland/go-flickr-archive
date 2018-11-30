@@ -1,8 +1,9 @@
-package archive
+package common
 
 import (
 	_ "context"
 	"fmt"
+	"github.com/aaronland/go-flickr-archive"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
 	"github.com/aaronland/go-flickr-archive/user"
@@ -10,7 +11,7 @@ import (
 	"time"
 )
 
-func ArchivePhotosForUser(arch Archive, api flickr.API, u user.User) error {
+func ArchivePhotosForUser(arch archive.Archivist, api flickr.API, u user.User) error {
 
 	query := url.Values{}
 	query.Set("user_id", u.ID())
@@ -36,7 +37,7 @@ func ArchivePhotosForUser(arch Archive, api flickr.API, u user.User) error {
 	return nil
 }
 
-func ArchivePhotosWithSearchForDay(arch Archive, api flickr.API, query url.Values, dt time.Time) error {
+func ArchivePhotosWithSearchForDay(arch archive.Archivist, api flickr.API, query url.Values, dt time.Time) error {
 
 	// because time.Format() is just so weird...
 
@@ -52,13 +53,13 @@ func ArchivePhotosWithSearchForDay(arch Archive, api flickr.API, query url.Value
 	return ArchivePhotosWithSearch(arch, api, query)
 }
 
-func ArchivePhotosWithSearch(arch Archive, api flickr.API, query url.Values) error {
+func ArchivePhotosWithSearch(arch archive.Archivist, api flickr.API, query url.Values) error {
 
 	method := "flickr.photos.search"
 	return ArchivePhotosWithSPR(arch, api, method, query)
 }
 
-func ArchivePhotosWithSPR(arch Archive, api flickr.API, method string, query url.Values) error {
+func ArchivePhotosWithSPR(arch archive.Archivist, api flickr.API, method string, query url.Values) error {
 
 	// ctx, cancel := context.WithCancel(context.Background())
 	// defer cancel()

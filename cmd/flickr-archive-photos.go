@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/aaronland/go-flickr-archive/archive"
+	"github.com/aaronland/go-flickr-archive/archivist"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
 	"github.com/aaronland/go-storage"
@@ -14,9 +14,8 @@ func main() {
 
 	var key = flag.String("api-key", "", "...")
 	var secret = flag.String("api-secret", "", "...")
-	// var username = flag.String("username", "", "...")
 
-	// please support other storage layers...x
+	// please support other storage layers...
 	var root = flag.String("root", "", "...")
 
 	flag.Parse()
@@ -39,8 +38,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	opts := archive.DefaultArchiveOptions()
-	arch, err := archive.NewArchivist(store, opts)
+	opts, err := archivist.DefaultStaticArchivistOptions()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	arch, err := archivist.NewStaticArchivist(store, opts)
 
 	if err != nil {
 		log.Fatal(err)

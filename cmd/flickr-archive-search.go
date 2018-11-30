@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/aaronland/go-flickr-archive/archive"
+	"github.com/aaronland/go-flickr-archive/archivist"
+	"github.com/aaronland/go-flickr-archive/common"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-storage"
 	"github.com/whosonfirst/go-whosonfirst-cli/flags"
@@ -34,8 +35,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	opts := archive.DefaultArchiveOptions()
-	arch, err := archive.NewArchivist(store, opts)
+	opts, err := archivist.DefaultStaticArchivistOptions()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	arch, err := archivist.NewStaticArchivist(store, opts)
 
 	if err != nil {
 		log.Fatal(err)
@@ -47,7 +53,7 @@ func main() {
 		query.Set(p.Key, p.Value)
 	}
 
-	err = archive.ArchivePhotosWithSearch(arch, api, query)
+	err = common.ArchivePhotosWithSearch(arch, api, query)
 
 	if err != nil {
 		log.Fatal(err)
