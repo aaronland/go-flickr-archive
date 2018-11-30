@@ -4,7 +4,6 @@ import (
 	"flag"
 	"github.com/aaronland/go-flickr-archive/archive"
 	"github.com/aaronland/go-flickr-archive/flickr"
-	"github.com/aaronland/go-flickr-archive/spr"
 	"github.com/aaronland/go-storage"
 	"github.com/whosonfirst/go-whosonfirst-cli/flags"
 	"log"
@@ -36,13 +35,11 @@ func main() {
 	}
 
 	opts := archive.DefaultArchiveOptions()
-	arch, err := archive.NewArchivist(api, store, opts)
+	arch, err := archive.NewArchivist(store, opts)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	method := "flickr.photos.search"
 
 	query := url.Values{}
 
@@ -50,7 +47,7 @@ func main() {
 		query.Set(p.Key, p.Value)
 	}
 
-	err = spr.ArchiveSPR(api, arch, method, query)
+	err = archive.ArchivePhotosWithSearch(arch, api, query)
 
 	if err != nil {
 		log.Fatal(err)

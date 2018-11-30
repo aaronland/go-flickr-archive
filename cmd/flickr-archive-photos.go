@@ -7,9 +7,7 @@ import (
 	"github.com/aaronland/go-flickr-archive/photo"
 	"github.com/aaronland/go-storage"
 	"log"
-	"os"
 	"path/filepath"
-	_ "time"
 )
 
 func main() {
@@ -42,7 +40,7 @@ func main() {
 	}
 
 	opts := archive.DefaultArchiveOptions()
-	arch, err := archive.NewArchivist(api, store, opts)
+	arch, err := archive.NewArchivist(store, opts)
 
 	if err != nil {
 		log.Fatal(err)
@@ -61,14 +59,10 @@ func main() {
 		photos = append(photos, ph)
 	}
 
-	ok, errs := arch.ArchivePhotos(photos...)
+	err = arch.ArchivePhotos(api, photos...)
 
-	if !ok {
-
-		for _, e := range errs {
-			log.Println(e)
+	if err != nil {
+		log.Fatal(err)
 		}
 
-		os.Exit(1)
-	}
 }
