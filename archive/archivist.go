@@ -2,7 +2,7 @@ package archive
 
 import (
 	"bytes"
-	_ "context"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -39,21 +39,31 @@ func (arch *Archivist) ArchivePhotos(api flickr.API, photos ...photo.Photo) erro
 	done_ch := make(chan bool)
 	err_ch := make(chan error)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	for _, ph := range photos {
 
-		go func(ph photo.Photo, done_ch chan bool, err_ch chan error) {
+		go func(ctx context.Context, ph photo.Photo, done_ch chan bool, err_ch chan error) {
 
 			defer func() {
 				done_ch <- true
 			}()
 
-			err := arch.ArchivePhoto(api, ph)
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// pass
+			}
+
+			err := arch.ArchivePhoto(ctx, api, ph)
 
 			if err != nil {
 				err_ch <- err
 			}
 
-		}(ph, done_ch, err_ch)
+		}(ctx, ph, done_ch, err_ch)
 	}
 
 	remaining := len(photos)
@@ -73,16 +83,14 @@ func (arch *Archivist) ArchivePhotos(api flickr.API, photos ...photo.Photo) erro
 	return nil
 }
 
-func (arch *Archivist) ArchivePhoto(api flickr.API, ph photo.Photo) error {
+func (arch *Archivist) ArchivePhoto(ctx context.Context, api flickr.API, ph photo.Photo) error {
 
-	/*
-		select {
-		case <-ctx.Done():
-			return nil
-		default:
-			// pass
-		}
-	*/
+	select {
+	case <-ctx.Done():
+		return nil
+	default:
+		// pass
+	}
 
 	str_id := strconv.FormatInt(ph.Id(), 10)
 
