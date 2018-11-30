@@ -17,14 +17,16 @@ import (
 	"net/url"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 type StaticArchivistOptions struct {
-	ArchiveInfo     bool
-	ArchiveSizes    bool
-	ArchiveEXIF     bool
-	ArchiveComments bool
-	ArchiveRequest  bool
+	ArchiveInfo       bool
+	ArchiveSizes      bool
+	ArchiveEXIF       bool
+	ArchiveComments   bool
+	ArchiveRequest    bool
+	RequestsPerSecond int
 	// Logger
 	// Throttle
 }
@@ -32,11 +34,12 @@ type StaticArchivistOptions struct {
 func DefaultStaticArchivistOptions() (*StaticArchivistOptions, error) {
 
 	opts := StaticArchivistOptions{
-		ArchiveInfo:     true,
-		ArchiveSizes:    false,
-		ArchiveEXIF:     false,
-		ArchiveComments: false,
-		ArchiveRequest:  false,
+		ArchiveInfo:       true,
+		ArchiveSizes:      false,
+		ArchiveEXIF:       false,
+		ArchiveComments:   false,
+		ArchiveRequest:    false,
+		RequestsPerSecond: 10,
 	}
 
 	return &opts, nil
@@ -44,15 +47,33 @@ func DefaultStaticArchivistOptions() (*StaticArchivistOptions, error) {
 
 type StaticArchivist struct {
 	archive.Archivist
-	store   storage.Store
-	options *StaticArchivistOptions
+	store    storage.Store
+	options  *StaticArchivistOptions
+	throttle <-chan time.Time
+	client   *http.Client
 }
 
 func NewStaticArchivist(store storage.Store, opts *StaticArchivistOptions) (archive.Archivist, error) {
 
+	// https://github.com/golang/go/wiki/RateLimiting
+
+	rate := time.Second / time.Duration(opts.RequestsPerSecond)
+	throttle := time.Tick(rate)
+
+	// maybe make this an option?
+
+	tr := &http.Transport{
+		MaxIdleConns:    10,
+		IdleConnTimeout: 30 * time.Second,
+	}
+
+	client := &http.Client{Transport: tr}
+
 	arch := StaticArchivist{
-		store:   store,
-		options: opts,
+		store:    store,
+		options:  opts,
+		throttle: throttle,
+		client:   client,
 	}
 
 	return &arch, nil
@@ -116,9 +137,9 @@ func (arch *StaticArchivist) ArchivePhoto(ctx context.Context, api flickr.API, p
 		// pass
 	}
 
-	str_id := strconv.FormatInt(ph.Id(), 10)
+	<-arch.throttle
 
-	// log.Println("ARCHIVE", str_id)
+	str_id := strconv.FormatInt(ph.Id(), 10)
 
 	info_params := url.Values{}
 	info_params.Set("photo_id", str_id)
@@ -182,7 +203,7 @@ func (arch *StaticArchivist) ArchivePhoto(ctx context.Context, api flickr.API, p
 		return errors.New("Unable to determine photo URL")
 	}
 
-	img_rsp, err := http.Get(photo_url)
+	img_rsp, err := arch.client.Get(photo_url)
 
 	if err != nil {
 		return err
