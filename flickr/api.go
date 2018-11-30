@@ -103,31 +103,31 @@ func (api *FlickrAuthAPI) ExecuteMethodPaginated(method string, params url.Value
 	pages := 0
 
 	/*
-	
-	done_ch := make(chan bool)
-	ticker := time.NewTicker(time.Second * 5)
-	
-	go func() {
 
-		for range ticker.C {
+		done_ch := make(chan bool)
+		ticker := time.NewTicker(time.Second * 5)
 
-			select {
-			case <- done_ch:
-				log.Printf("%s (%s) DONE\n", method, params.Get("woe_id"))
-				return
-			default:
-				log.Printf("%s (%s) page %d/%d\n", method, params.Get("woe_id"), page, pages)
+		go func() {
+
+			for range ticker.C {
+
+				select {
+				case <- done_ch:
+					log.Printf("%s (%s) DONE\n", method, params.Get("woe_id"))
+					return
+				default:
+					log.Printf("%s (%s) page %d/%d\n", method, params.Get("woe_id"), page, pages)
+				}
 			}
-		}
-		
-	}()
 
-	defer func() {
-		done_ch <- true
-	}()
-	
+		}()
+
+		defer func() {
+			done_ch <- true
+		}()
+
 	*/
-	
+
 	for {
 
 		params.Set("page", strconv.Itoa(page))
@@ -154,7 +154,7 @@ func (api *FlickrAuthAPI) ExecuteMethodPaginated(method string, params url.Value
 
 		pages = spr.Photos.Pages
 		page += 1
-		
+
 		if pages == 0 || page > pages {
 			break
 		}
