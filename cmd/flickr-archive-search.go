@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/aaronland/go-flickr-archive/archive"
+	"github.com/aaronland/go-flickr-archive/archivist"
+	"github.com/aaronland/go-flickr-archive/common"
 	"github.com/aaronland/go-flickr-archive/flickr"
-	"github.com/aaronland/go-flickr-archive/spr"
 	"github.com/aaronland/go-storage"
 	"github.com/whosonfirst/go-whosonfirst-cli/flags"
 	"log"
@@ -35,14 +35,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	opts := archive.DefaultArchiveOptions()
-	arch, err := archive.NewArchivist(api, store, opts)
+	opts, err := archivist.DefaultStaticArchivistOptions()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	method := "flickr.photos.search"
+	arch, err := archivist.NewStaticArchivist(store, opts)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	query := url.Values{}
 
@@ -50,7 +53,7 @@ func main() {
 		query.Set(p.Key, p.Value)
 	}
 
-	err = spr.ArchiveSPR(api, arch, method, query)
+	err = common.ArchivePhotosWithSearch(arch, api, query)
 
 	if err != nil {
 		log.Fatal(err)

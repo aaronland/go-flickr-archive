@@ -1,88 +1,117 @@
-package archive
+package archivist
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/aaronland/go-flickr-archive"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
 	"github.com/aaronland/go-storage"
 	"github.com/tidwall/gjson"
 	"io/ioutil"
+	_ "log"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
-type Archive interface {
-	ArchivePhotos(...photo.Photo) (bool, []error)
+type StaticArchivistOptions struct {
+	ArchiveInfo       bool
+	ArchiveSizes      bool
+	ArchiveEXIF       bool
+	ArchiveComments   bool
+	ArchiveRequest    bool
+	RequestsPerSecond int
+	// Logger
+	// Throttle
 }
 
-type ArchiveOptions struct {
-	ArchiveInfo     bool
-	ArchiveSizes    bool
-	ArchiveEXIF     bool
-	ArchiveComments bool
-	ArchiveRequest  bool
-}
+func DefaultStaticArchivistOptions() (*StaticArchivistOptions, error) {
 
-func DefaultArchiveOptions() *ArchiveOptions {
-
-	opts := ArchiveOptions{
-		ArchiveInfo:     true,
-		ArchiveSizes:    false,
-		ArchiveEXIF:     false,
-		ArchiveComments: false,
-		ArchiveRequest:  false,
+	opts := StaticArchivistOptions{
+		ArchiveInfo:       true,
+		ArchiveSizes:      false,
+		ArchiveEXIF:       false,
+		ArchiveComments:   false,
+		ArchiveRequest:    false,
+		RequestsPerSecond: 10,
 	}
 
-	return &opts
+	return &opts, nil
 }
 
-type Archivist struct {
-	Archive
-	api     flickr.API
-	store   storage.Store
-	options *ArchiveOptions
+type StaticArchivist struct {
+	archive.Archivist
+	store    storage.Store
+	options  *StaticArchivistOptions
+	throttle <-chan time.Time
+	client   *http.Client
 }
 
-func NewArchivist(api flickr.API, store storage.Store, opts *ArchiveOptions) (Archive, error) {
+func NewStaticArchivist(store storage.Store, opts *StaticArchivistOptions) (archive.Archivist, error) {
 
-	arch := Archivist{
-		api:     api,
-		store:   store,
-		options: opts,
+	// https://github.com/golang/go/wiki/RateLimiting
+
+	rate := time.Second / time.Duration(opts.RequestsPerSecond)
+	throttle := time.Tick(rate)
+
+	// maybe make this an option?
+
+	tr := &http.Transport{
+		MaxIdleConns:    10,
+		IdleConnTimeout: 30 * time.Second,
+	}
+
+	client := &http.Client{Transport: tr}
+
+	arch := StaticArchivist{
+		store:    store,
+		options:  opts,
+		throttle: throttle,
+		client:   client,
 	}
 
 	return &arch, nil
 }
 
-func (arch *Archivist) ArchivePhotos(photos ...photo.Photo) (bool, []error) {
+func (arch *StaticArchivist) ArchivePhotos(api flickr.API, photos ...photo.Photo) error {
 
 	done_ch := make(chan bool)
 	err_ch := make(chan error)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	for _, ph := range photos {
 
-		go func(ph photo.Photo, done_ch chan bool, err_ch chan error) {
+		go func(ctx context.Context, ph photo.Photo, done_ch chan bool, err_ch chan error) {
 
 			defer func() {
 				done_ch <- true
 			}()
 
-			err := arch.archivePhoto(ph)
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// pass
+			}
+
+			err := arch.ArchivePhoto(ctx, api, ph)
 
 			if err != nil {
 				err_ch <- err
 			}
 
-		}(ph, done_ch, err_ch)
+		}(ctx, ph, done_ch, err_ch)
 	}
 
 	remaining := len(photos)
-	arch_errors := make([]error, 0)
 
 	for remaining > 0 {
 
@@ -90,27 +119,32 @@ func (arch *Archivist) ArchivePhotos(photos ...photo.Photo) (bool, []error) {
 		case <-done_ch:
 			remaining -= 1
 		case e := <-err_ch:
-			arch_errors = append(arch_errors, e)
+			return e
 		default:
 			// pass
 		}
 	}
 
-	if len(arch_errors) > 0 {
-		return false, arch_errors
-	}
-
-	return true, nil
+	return nil
 }
 
-func (arch *Archivist) archivePhoto(ph photo.Photo) error {
+func (arch *StaticArchivist) ArchivePhoto(ctx context.Context, api flickr.API, ph photo.Photo) error {
+
+	select {
+	case <-ctx.Done():
+		return nil
+	default:
+		// pass
+	}
+
+	<-arch.throttle
 
 	str_id := strconv.FormatInt(ph.Id(), 10)
 
 	info_params := url.Values{}
 	info_params.Set("photo_id", str_id)
 
-	info, info_err := arch.api.ExecuteMethod("flickr.photos.getInfo", info_params)
+	info, info_err := api.ExecuteMethod("flickr.photos.getInfo", info_params)
 
 	if info_err != nil {
 		return info_err
@@ -131,7 +165,7 @@ func (arch *Archivist) archivePhoto(ph photo.Photo) error {
 	sizes_params := url.Values{}
 	sizes_params.Set("photo_id", str_id)
 
-	sizes, sizes_err := arch.api.ExecuteMethod("flickr.photos.getSizes", sizes_params)
+	sizes, sizes_err := api.ExecuteMethod("flickr.photos.getSizes", sizes_params)
 
 	if sizes_err != nil {
 		return sizes_err
@@ -169,7 +203,7 @@ func (arch *Archivist) archivePhoto(ph photo.Photo) error {
 		return errors.New("Unable to determine photo URL")
 	}
 
-	img_rsp, err := http.Get(photo_url)
+	img_rsp, err := arch.client.Get(photo_url)
 
 	if err != nil {
 		return err
