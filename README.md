@@ -4,5 +4,5 @@ This is work in progress. It is not documented yet and should be considered expe
 
 ## See also
 
-* https://github.com/aaronland/go-storage
+* https://github.com/aaronland/go-flickr-api
 

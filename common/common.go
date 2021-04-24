@@ -3,6 +3,7 @@ package common
 import (
 	_ "context"
 	"fmt"
+	"github.com/aaronland/go-flickr-api/client"	
 	"github.com/aaronland/go-flickr-archive"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-func ArchivePhotosForUser(arch archive.Archivist, api flickr.API, u user.User) error {
+func ArchivePhotosForUser(arch archive.Archivist, cl client.Client, u user.User) error {
 
 	query := url.Values{}
 	query.Set("user_id", u.ID())
@@ -20,7 +21,7 @@ func ArchivePhotosForUser(arch archive.Archivist, api flickr.API, u user.User) e
 
 	for {
 
-		err := ArchivePhotosWithSearchForDay(arch, api, query, dt)
+		err := ArchivePhotosWithSearchForDay(arch, cl, query, dt)
 
 		if err != nil {
 			return err
@@ -37,7 +38,7 @@ func ArchivePhotosForUser(arch archive.Archivist, api flickr.API, u user.User) e
 	return nil
 }
 
-func ArchivePhotosWithSearchForDay(arch archive.Archivist, api flickr.API, query url.Values, dt time.Time) error {
+func ArchivePhotosWithSearchForDay(arch archive.Archivist, cl client.Client, query url.Values, dt time.Time) error {
 
 	// because time.Format() is just so weird...
 
@@ -50,16 +51,16 @@ func ArchivePhotosWithSearchForDay(arch archive.Archivist, api flickr.API, query
 	query.Set("min_upload_date", min_date)
 	query.Set("max_upload_date", max_date)
 
-	return ArchivePhotosWithSearch(arch, api, query)
+	return ArchivePhotosWithSearch(arch, cl, query)
 }
 
-func ArchivePhotosWithSearch(arch archive.Archivist, api flickr.API, query url.Values) error {
+func ArchivePhotosWithSearch(arch archive.Archivist, cl client.Client, query url.Values) error {
 
 	method := "flickr.photos.search"
-	return ArchivePhotosWithSPR(arch, api, method, query)
+	return ArchivePhotosWithSPR(arch, cl, method, query)
 }
 
-func ArchivePhotosWithSPR(arch archive.Archivist, api flickr.API, method string, query url.Values) error {
+func ArchivePhotosWithSPR(arch archive.Archivist, cl client.Client, method string, query url.Values) error {
 
 	// ctx, cancel := context.WithCancel(context.Background())
 	// defer cancel()
@@ -79,8 +80,8 @@ func ArchivePhotosWithSPR(arch archive.Archivist, api flickr.API, method string,
 			photos = append(photos, ph)
 		}
 
-		return arch.ArchivePhotos(api, photos...)
+		return arch.ArchivePhotos(cl, photos...)
 	}
 
-	return api.ExecuteMethodPaginated(method, query, cb)
+	return cl.ExecuteMethodPaginated(method, query, cb)
 }

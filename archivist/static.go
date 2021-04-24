@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/aaronland/go-flickr-api/client"	
 	"github.com/aaronland/go-flickr-archive"
 	"github.com/aaronland/go-flickr-archive/flickr"
 	"github.com/aaronland/go-flickr-archive/photo"
@@ -128,7 +129,7 @@ func (arch *StaticArchivist) ArchivePhotos(api flickr.API, photos ...photo.Photo
 	return nil
 }
 
-func (arch *StaticArchivist) ArchivePhoto(ctx context.Context, api flickr.API, ph photo.Photo) error {
+func (arch *StaticArchivist) ArchivePhoto(ctx context.Context, cl client.Client, ph photo.Photo) error {
 
 	select {
 	case <-ctx.Done():
@@ -144,7 +145,7 @@ func (arch *StaticArchivist) ArchivePhoto(ctx context.Context, api flickr.API, p
 	info_params := url.Values{}
 	info_params.Set("photo_id", str_id)
 
-	info, info_err := api.ExecuteMethod("flickr.photos.getInfo", info_params)
+	info, info_err := cl.ExecuteMethod("flickr.photos.getInfo", info_params)
 
 	if info_err != nil {
 		return info_err
